@@ -19,7 +19,11 @@ using namespace mpfr;
 
 void MyPrint(string time, int &N, double &tcpu, vector<string> &data, ostream &str) {
   str << time << " " << N << " " << tcpu << endl;
-  for(int i=0; i<N; i++) {
+  int imin = 0;
+  //if (time<=0) {
+  //  imin = 1;
+  //}
+  for(int i=imin; i<N; i++) {
     for(int j=0; j<7; j++) {
       str << data[i*7+j] << " ";
     }
@@ -28,6 +32,15 @@ void MyPrint(string time, int &N, double &tcpu, vector<string> &data, ostream &s
   str << endl;
 }
 
+/*
+std::string line = "hello world example line";
+    std::vector<std::string> tokens;
+    std::istringstream iss(line);
+    std::string token;
+
+    while (iss >> token) {
+        tokens.push_back(token);
+    }
 vector<mpreal> read_snapshot_from_file(const string & file_in) {
   vector<mpreal> data;
   string line;
@@ -36,8 +49,32 @@ vector<mpreal> read_snapshot_from_file(const string & file_in) {
   if (inFile) {
     while (std::getline(inFile, line)) {
       std::istringstream iss(line);
+      cout << "line="<<line<<endl;
       while (iss >> value) {
-	data.push_back(value);
+          cout <<"value="<<value<<endl;
+          data.push_back(value);
+      }
+    }
+  }
+  inFile.close();
+  return data;
+}
+*/
+
+vector<mpreal> read_snapshot_from_file(const string & file_in) {
+  vector<mpreal> data;
+  string line;
+  string value;
+  ifstream inFile(file_in);
+  if (inFile) {
+    while (std::getline(inFile, line)) {
+      std::istringstream iss(line);
+      //cout << "line=" << line << endl;
+      while (iss >> value) {
+          //cout << "value=" << value << endl;
+          // Set high precision first (bits; e.g., 500 bits ~150 decimals)
+          mpfr::mpreal::set_default_prec(500);  // Adjust as needed
+          data.push_back(mpfr::mpreal(value.c_str()));  // Direct high-prec from string
       }
     }
   }
@@ -208,14 +245,15 @@ int main(int argc, char* argv[]) {
   mpreal dt = argv[5];
   int N = atoi(argv[6]);
   string input_file;
-  vector<mpreal> data;    
-  if(argc > 7){
-    input_file = argv[7];
+  vector<mpreal> data;
+  if(argc == 8){
+     input_file = argv[7];
      data = read_snapshot_from_file(input_file);
   }
   else {
     data = get_initial_condition();
   }
+  N = data.size()/7;
   mpreal::set_default_prec(numBits);
   int numDigits = (int)abs(log10( pow("2.0", -numBits) )).toLong();
   
@@ -243,6 +281,7 @@ int main(int argc, char* argv[]) {
 
   vector<string> sdata = brutus.get_data_string();
 
+  sdata = brutus.get_data_string();
   MyPrint(t.toString(), N, t_cpu, sdata, cout);
 
   /////////////////////////////////////////////////////////
@@ -274,7 +313,7 @@ int main(int argc, char* argv[]) {
 
   cerr << "Result: filename= " << input_file;
   cerr << " N= " << N; 
-  cerr << " t_begin= " << t_begin; 
+  cerr << " t_begin= " << t_begin;;
   cerr << " t_end= " << t; 
   cerr << " dt= " << dt;
   cerr << " eta= " << eta;
